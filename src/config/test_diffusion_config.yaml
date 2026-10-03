@@ -1,0 +1,19 @@
+mode: train
+data: data/FD001.csv
+model_name: diffusion
+model:
+  type: "diffusion"
+  hidden_dim: 256
+
+training:
+  epochs: 5
+  batch_size: 16
+  lr: 0.0002
+
+diffusion:
+  T: 1000
+  beta_start: 0.0001
+
+generation:
+  n_engines: 1
+  cycles_per_engine: 2

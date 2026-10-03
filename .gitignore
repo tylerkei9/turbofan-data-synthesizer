@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Trained models and generated files (re-created by training and generation)
+*.pt
+src/model_checkPoints/
+outputs/
+src/features/propagation_testing/outputs/
+src/validate/results/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

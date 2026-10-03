@@ -1,0 +1,52 @@
+# name parameter is used for:
+# - naming the .pt file in model_checkPoints 
+# - selecting which model to load for generation
+# - naming the generated synth_data .csv file in outputs/transformer
+model:
+  type: "Transformer"
+  name: "name_from_frontend" # front end interacts with this when training, generating, deciding which model to load!
+
+runtime:
+  lambda_var: 0.01
+  seed: 42
+  input_window: 31
+  pred_window: 1
+  batch_size: 256
+  epochs: 50
+  lr: 5.0e-4
+  weight_decay: 1.0e-4
+  num_workers: 2
+
+# - "by_engines": generates cycles_per_engine for each engine (may exceed num_samples)
+# - "by_samples": generates exactly num_samples total (may skip engines)
+# - "n_engines": number of engines to generate (set to 'null' if want to include all engines)
+# - "cycles_per_engine": only used if strategy="all_engines"
+# - "num_samples": only used if strategy="total_samples"
+# - "reseed_interval": re-inject a real window every N steps (single-sequence only; recommended: 64)
+generation:
+  strategy: "by_engines"
+  n_engines: 50 
+  cycles_per_engine: 30 # if single-sequence, this is how many samples it generates. For RR, put a high number.
+  num_samples: 2000
+  reseed_interval: 64   
+  
+columns:
+  engine_id_col_candidates: ["Engine_ID", "UnitNumber", "engine_id"]
+  time_col_candidates: ["cycle", "Time", "time", "timestamp"]
+
+io:
+  data_paths:
+    - "data/FD001.csv"
+    # - "data/FD002.csv"
+    # - "data/FD003.csv"
+    # - "data/FD004.csv"
+  outputs_dir: "outputs/transformer"
+  checkpoint_dir: "src/model_checkPoints/transformer"
+
+logging:
+  use_tensorboard: true
+  use_csv: true
+  console_level: "INFO"
+  file_level: "DEBUG"
+  log_interval: 0
+  save_plots: true

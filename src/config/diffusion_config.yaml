@@ -1,0 +1,26 @@
+mode: train
+data: data/FD001.csv
+model_name: diffusion
+model:
+  type: "diffusion"
+  hidden_dim: 256
+
+# Conditioning behaviour. The model auto-selects which columns to condition
+# on from the data itself (variance + correlation heuristic) — engineers do
+# not need to know which parameters drive operational distributions.
+# Only `n_conditions` (how many columns to pick) is configurable.
+conditioning:
+  n_conditions: 3
+
+training:
+  epochs: 100
+  batch_size: 16
+  lr: 0.0002
+
+diffusion:
+  T: 1000
+  beta_start: 0.0001
+
+generation:
+  n_engines: 10
+  cycles_per_engine: 20

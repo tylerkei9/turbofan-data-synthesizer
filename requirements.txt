@@ -1,0 +1,12 @@
+# Python 3.10+ (developed on 3.13). Install with:  pip install -r requirements.txt
+# PyTorch installs the CPU build by default. For an NVIDIA GPU, install torch first
+# using the command from https://pytorch.org/get-started/locally/ and then run the line above.
+torch>=2.2
+numpy>=1.24
+pandas>=2.0
+scipy>=1.10
+scikit-learn>=1.3
+matplotlib>=3.7
+seaborn>=0.12
+PyYAML>=6.0
+tqdm>=4.65
