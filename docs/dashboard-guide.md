@@ -28,9 +28,9 @@ Each stage has two columns:
 |---|---|
 | Import | How many rows and engines were loaded, and real vs artificial readings for one engine. |
 | Train | The loss dropping epoch by epoch, how noise is added during training, and the model's size. |
-| Fine-tune | How small the LoRA add-on is compared with the model, and its loss over 30 epochs. |
 | Generate | The model turning random noise into realistic readings, step by step, and the final distribution compared with real data. |
 | Edit | A tool to shift one sensor's values and preview the effect. Each change creates a new version. |
+| Fine-tune | How small the LoRA add-on is compared with the model, and its loss over 30 epochs. |
 | Validate | The verdict, a pass or fail per sensor, distribution and PCA charts, and the Transformer vs diffusion comparison. |
 
 ## What is real and what is replayed

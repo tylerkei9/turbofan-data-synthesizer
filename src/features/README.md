@@ -7,8 +7,9 @@ This directory contains three independent features for synthetic data manipulati
 2. **Shifting** - Adjusts sensor values by user-specified amounts with real-time visualization
 3. **Propagation** - Regenerates synthetic data using trained models to reflect cascading relationships
 
-Each feature is self-contained with a single public function that the frontend calls.
-These features are designed to work **after** synthetic data has been generated, providing post-processing and exploration capabilities through an interactive Streamlit interface.
+Each feature is self-contained with a single public function. The dashboard calls them through
+`api/pipeline.py` (see [Integration with the Dashboard](#integration-with-the-dashboard)). They work
+**after** synthetic data has been generated, to edit and explore it.
 
 ---
 ## 📁 Module Structure
@@ -435,76 +436,28 @@ def test_both_models():
 
 ---
 
-## Integration with Frontend
+## Integration with the Dashboard
 
 ### How Features Are Called
 
-The frontend orchestrates all feature calls in the `apply_all_changes()` function:
+The dashboard (`dashboard/index.html`) sends edit requests to the local API server, and
+`api/pipeline.py` calls the feature functions on the current synthetic dataset:
 
-```python
-def apply_all_changes():
-    modified_data = st.session_state.synth_data.copy()
-    
-    # Step 1: Apply shifts
-    if st.session_state.shift_values:
-        modified_data = apply_shift(modified_data, st.session_state.shift_values)
-    
-    # Step 2: Apply interpolation
-    interpolate_cols = [col for col, enabled in st.session_state.interpolate_enabled.items() if enabled]
-    if interpolate_cols:
-        modified_data = apply_interpolation(modified_data, target_columns=interpolate_cols)
-    
-    # Step 3: Apply propagation
-    if any(st.session_state.propagate_enabled.values()):
-        modified_data = apply_propagation(
-            modified_data,
-            model_type=selected_model,
-            checkpoint_path=checkpoint_path
-        )
-    
-    # Update session state
-    st.session_state.synth_data = modified_data
-```
+| Dashboard action | `api/pipeline.py` function | Feature function |
+|---|---|---|
+| Shift a sensor | `apply_shift_to_session(column, amount)` | `apply_shift()` |
+| Fill gaps / interpolate | `apply_interpolation_to_session(columns, method, gap)` | `apply_interpolation()` |
+| Propagate an edit | `apply_propagation_to_session(prop_cols, cutoff)` | `apply_propagation()` |
+
+Each call takes the session's current synthetic DataFrame, passes a copy to the feature, and stores
+the returned DataFrame as the new current data, so edits stack in the order the user makes them.
 
 ### Key Points
 
-1. **Frontend decides order** - Features are called in sequence
+1. **The caller decides order** - Features are called one at a time, in the order the user edits
 2. **Features don't call each other** - Each feature is independent
-3. **Frontend passes parameters** - UI state converted to function parameters
-4. **Features return results** - Frontend handles result storage and visualization
-
----
-
-## Development Workflow
-
-### Week 6-7: Planning & Skeleton
-- [ ] Define function signatures
-- [ ] Write README documentation
-- [ ] Create skeleton code with placeholders
-- [ ] Agree on data formats and interfaces
-- [ ] Study feature requirements and create documentation
-- [ ] Build skeleton code with clear function signatures
-- [ ] Establish integration points with frontend
-
-
-### Week 8-9: Basic Implementation
-- [ ] Implement basic version of feature
-- [ ] Test with sample data
-- [ ] Integrate with frontend
-- [ ] Verify end-to-end flow works
-
-### Week 11-14: Advanced Implementation
-- [ ] Add advanced algorithms
-    - **Interpolation**: ML-based methods (Gaussian Processes, neural networks)
-- [ ] Optimize performance
-- [ ] Handle edge cases
-- [ ] Comprehensive testing
-- [ ] Final integration testing
-
-### Weeks 15-16: Testing & Handoff
-- End-to-end testing with real synthetic data
-- Documentation finalization
-- Symposium preparation and project handoff
+3. **The API passes parameters** - Dashboard controls are converted to function parameters
+4. **Features return results** - `api/pipeline.py` stores the result and sends a summary back to the dashboard
 
 ---
 
@@ -540,10 +493,10 @@ def get_numeric_columns(df: pd.DataFrame) -> list:
 ## 📚 Additional Resources
 
 - [NASA C-MAPSS Dataset Documentation](https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/)
-- [Project Main README](../../README_spring.md)
+- [Project Main README](../../README.md)
 - [Diffusion Model Documentation](../training/Diffusion/)
 - [Transformer Model Documentation](../training/Transformer/)
-- [Frontend Documentation](../../frontend/README.md)
+- [Dashboard Guide](../../docs/dashboard-guide.md)
 
 ---
 

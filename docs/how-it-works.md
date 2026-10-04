@@ -52,14 +52,15 @@ that never change.
 diffusion model used here trained for 100 epochs, about 30 minutes on a laptop. The trained model is
 saved as a *checkpoint* file.
 
-**3. Fine-tune.** Instead of retraining the whole model, attach a small add-on (*LoRA*) and train only
-that. Here it changes just 1.44% of the model's numbers, yet it noticeably improves how well the
-output matches the real data.
+**3. Generate.** Ask the model for new, artificial readings. The final test uses 274 of them.
 
-**4. Generate.** Ask the model for new, artificial readings. The demo uses 274 of them.
-
-**5. Edit (optional).** Deliberately change the artificial data to create test cases, for example
+**4. Edit (optional).** Deliberately change the artificial data to create test cases, for example
 raise one sensor's values. Every edit creates a new version; the original is kept.
+
+**5. Fine-tune.** Instead of retraining the whole model, attach a small add-on (*LoRA*) and train only
+that. Here it changes just 1.44% of the model's numbers, yet it noticeably improves how well the
+output matches the real data. The fine-tuned model then generates the final artificial readings that
+step 6 tests.
 
 **6. Validate.** Compare artificial and real readings with standard statistical tests:
 

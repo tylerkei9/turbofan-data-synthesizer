@@ -36,9 +36,9 @@ The [dashboard guide](docs/dashboard-guide.md) explains every screen.
 |---|---|
 | 1. Import | Load real engine records: each row is one engine at one moment, with its sensor readings. |
 | 2. Train | An AI model studies the real records until it learns what normal readings look like. |
-| 3. Fine-tune | A small add-on (called LoRA) adjusts the trained model so its output matches the real data more closely. |
-| 4. Generate | The model produces brand-new, artificial sensor readings. |
-| 5. Edit (optional) | Adjust the artificial data, for example shift a sensor's values, to create test scenarios. |
+| 3. Generate | The model produces brand-new, artificial sensor readings. |
+| 4. Edit (optional) | Adjust the artificial data, for example shift a sensor's values, to create test scenarios. |
+| 5. Fine-tune | A small add-on (called LoRA) adjusts the trained model so its output matches the real data more closely; the improved model then generates the final artificial data. |
 | 6. Validate | Statistical tests compare artificial and real readings and give a pass or fail per sensor. |
 
 More detail, still in plain language: [docs/how-it-works.md](docs/how-it-works.md).

@@ -186,77 +186,16 @@ file is a list when multiple seed files were used, a string otherwise.
 
 ---
 
-## Streamlit Frontend Integration
+## Running from the Dashboard
 
-The project ships a Streamlit UI at [frontend/app.py](../../../frontend/app.py)
-that drives `diffusion_model5.py` via `subprocess`. Three dialogs talk to the
-diffusion backend; all three build their command-line arguments from widget
-state and pipe the child process's stdout back into a live log panel.
+The dashboard does not import this file. `api/pipeline.py` runs `diffusion_model5.py` as a
+subprocess (`DIFFUSION_SCRIPT`), builds the command-line flags from the dashboard's settings
+(`--mode train`, `--mode fine-tune`, `--mode generate`, plus data paths, epochs and LoRA options),
+and streams the script's printed log back to the page. `api/events.py` turns those log lines into
+progress events (epoch, loss, saved files) for the progress bars and charts.
 
-### Shared file-picker helper
-
-All diffusion dialogs collect data paths through `_collect_diffusion_data_paths`,
-which merges three input sources into one deduplicated list:
-
-1. **Multiselect over `data/`** — every `.csv` / `.txt` under the repo's
-   `data/` directory is listed for one-click selection.
-2. **File uploader** (`accept_multiple_files=True`) — uploaded blobs are
-   persisted to `frontend/uploads/<dialog-key>/<filename>` so the subprocess
-   receives real on-disk paths, not in-memory buffers.
-3. **Manual paths** — a comma-separated text input for paths the user types
-   directly (e.g. absolute paths or files outside `data/`).
-
-Adapter files are discovered similarly by `_list_diffusion_adapters`, which
-scans `src/model_checkPoints/diffusion/adapters/adapter_*.pt` (and `*.pt` files in that directory).
-
-### Train dialog → `--mode train`
-
-Fields:
-
-| Widget | CLI flag |
-|---|---|
-| Training data — multiselect + uploader + manual | `--data p1 p2 ...` |
-| Model name | `--model-name` (controls `src/model_checkPoints/<name>/` and `outputs/<name>/`) |
-| Output CSV name (optional) | `--out` |
-| Epochs / batch size / LR | `--epochs` / `--batch-size` / `--lr` |
-| Hidden size / heads / layers / T / n-conditions | `--hidden-dim` / `--n-heads` / `--n-layers` / `--T` / `--n-conditions` |
-| Auto-sample engines / cycles | `--n-engines` / `--cycles-per-engine` |
-| Resume checkpoint | `--checkpoint` |
-
-After training, the auto-generated synthetic CSV lands at
-`outputs/<model_name>/synthetic_data/<out>` and is loaded back into the UI.
-
-### Generate dialog → `--mode generate`
-
-Fields:
-
-| Widget | CLI flag |
-|---|---|
-| Checkpoint dropdown / manual path | `--checkpoint` |
-| Run name | `--model-name` |
-| Output CSV name (optional) | `--out` |
-| Seed data — multiselect + uploader + manual | `--data p1 p2 ...` (inpainting) |
-| LoRA adapters — multiselect + manual | `--adapters a1.pt a2.pt ...` |
-| Groups / rows per group | `--n-engines` / `--cycles-per-engine` |
-
-Seed data and adapters are both optional. When `Use seed data` is unchecked,
-generation runs fully unconditional from noise. When adapters are selected,
-they compose additively in the listed order on top of the frozen base model.
-
-### Fine-tune dialog → `--mode fine-tune`
-
-Dedicated sidebar entry: **Fine-tune LoRA (Diffusion)**. Fields:
-
-| Widget | CLI flag |
-|---|---|
-| Base checkpoint | `--checkpoint` |
-| Target adapter name | combined into `--adapter-out` (`src/model_checkPoints/diffusion/adapters/<adapter_name>`) |
-| Seed data — multiselect + uploader + manual | `--seed-data p1 p2 ...` |
-| LoRA rank / alpha | `--lora-rank` / `--lora-alpha` |
-| Epochs / LR / batch size | `--epochs` / `--lr` / `--batch-size` |
-
-The dialog always passes `--no-auto-sample` — fine-tune only writes the
-adapter; it does not generate synthetic data in the same run.
+Because the dashboard only uses the command-line interface, anything it does can be reproduced
+from a terminal with the commands in [How to Run](#how-to-run).
 
 ---
 
@@ -338,11 +277,10 @@ python src/training/Diffusion/test_diffusion_multifile.py
 
 ---
 
-## Changelog — Frontend ↔ Backend Integration (April 2026)
+## Changelog — Multi-file Data and LoRA Support (April 2026)
 
-This pass wired the Streamlit frontend through to `diffusion_model5.py` so
-multi-file data, model naming, and LoRA adapters are all controllable from
-the UI without editing configs by hand.
+This pass made multi-file data, model naming, and LoRA adapters controllable
+from the command line without editing configs by hand.
 
 ### Backend — `diffusion_model5.py`
 
@@ -363,40 +301,9 @@ the UI without editing configs by hand.
   before `main()` ran. Expanded to `["train", "generate", "fine-tune"]`.
   ([diffusion_model5.py#L106](diffusion_model5.py#L106))
 
-### Frontend — `frontend/app.py`
-
-- **`_SCRIPTS["Diffusion v2"]`** now points to
-  `src/training/Diffusion/diffusion_model5.py` in both `train_dialog` and
-  `generate_dialog` (previously referenced a non-existent
-  `hope/diffusion_model2.py`).
-- **New shared helpers**:
-  - `_list_data_dir_csvs()` — enumerate files under `data/` for multiselect.
-  - `_persist_uploaded_files()` — write Streamlit `UploadedFile` blobs to
-    `frontend/uploads/<dialog-key>/` so paths can be passed to subprocesses.
-  - `_collect_diffusion_data_paths()` — unified picker that merges
-    multiselect + uploader + manual-path text input into one deduplicated
-    list of paths.
-  - `_list_diffusion_adapters()` — discover `adapter_*.pt` files across all
-    `src/model_checkPoints/*/`.
-  - `_list_diffusion_checkpoints()` — enumerate base checkpoints (non-adapter
-    `.pt` files).
-- **Train dialog — Diffusion branch rewritten** to build CLI flags that match
-  `diffusion_model5.py` (previously called flags from a different model).
-  Adds a dedicated "Training data" tab with the shared multi-file picker.
-  Exposes `Model name` → `--model-name` and `Output CSV name` → `--out`.
-- **Generate dialog — Diffusion branch rewritten** with four tabs:
-  Configuration, Seed data, LoRA adapters, Sampling. Seed data uses the
-  shared multi-file picker; LoRA adapters use a multiselect seeded from
-  `_list_diffusion_adapters()` plus a manual-path fallback.
-- **New `fine_tune_dialog()`** — modal dialog for creating LoRA adapters.
-  Pairs a base-checkpoint picker with the shared multi-file seed picker and
-  all LoRA hyperparameters. Outputs `src/model_checkPoints/<folder>/<name>.pt`.
-- **Sidebar** — added a third button, **Fine-tune LoRA (Diffusion)**, next
-  to Train and Generate.
-
 ### Verified subprocess contracts
 
-The following commands (the exact shapes the frontend builds) were smoke-tested:
+The following commands were smoke-tested:
 
 ```bash
 # Multi-file training with naming

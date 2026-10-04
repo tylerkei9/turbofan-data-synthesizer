@@ -402,7 +402,7 @@ def to_events(step: str) -> dict:
     p = LogParser(kind, epochs=epochs, engines=DEMO_ENGINES if step == "gen_t" else None)
     pairs = p.start()
     for t, line in rec["lines"]:
-        pairs += p.feed(t, line)
+        pairs += p.feed(t, line.replace(f"{ROOT}/", ""))  # show repo-relative paths, not the recording machine's
     pairs += p.finish(total)
     if step == "train_t":
         ck = ROOT / "src" / "model_checkPoints" / "transformer" / f"{T_NAME}.pt"

@@ -145,12 +145,13 @@ result = apply_interpolation(
 
 ------------------------------------------------------------------------
 
-## ⚠️ Important Limitation
+## Using It from the Dashboard
 
-### Gap Detection Not Supported in Frontend
-
--   Gap detection is implemented in backend via `detect_clusters()`
--   Frontend does NOT support gap-aware logic
+-   The dashboard lets the user pick the method (linear or spline) and calls
+    `apply_interpolation()` through `api/pipeline.py`
+-   Gap detection (`detect_clusters()`) runs automatically when the spline method is chosen
+-   The bundled NASA data has no natural gaps, so the demo can punch a gap into one engine
+    first and then fill it, to show the method working
 
 ------------------------------------------------------------------------
 
@@ -230,11 +231,10 @@ This verifies:
 -   Gateway ensures a consistent API regardless of method
 -   No breaking changes to existing usage
 -   Designed for backend-driven workflows
--   Frontend support is partial (no gap detection)
+-   Available from the dashboard through `api/pipeline.py`
 
 ## Next Steps
 
 ### For Future Development:
-1. **Add Method Selection UI**: Add dropdown/radio buttons in frontend to let users choose method
-2. **Implement ML Interpolation**: Create ML-based module and update gateway
-3. **Parameter Tuning UI**: Add controls for method-specific parameters
+1. **Implement ML Interpolation**: Create ML-based module and update gateway
+2. **Parameter Tuning UI**: Add controls for method-specific parameters
