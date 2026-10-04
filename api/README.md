@@ -1,37 +1,42 @@
-# Data Synthesizer API
+# API
 
-A thin HTTP adapter over the real project code (`src/features/*`, `src/training/*`,
-`src/validate/*`). No model or statistics logic lives here — every endpoint
-imports and calls the existing functions directly.
-
-**Note on framework:** this environment has no PyPI access, so FastAPI/Flask
-could not be installed. `api/server.py` is built on Python's standard-library
-`http.server` instead (`ThreadingHTTPServer` + `BaseHTTPRequestHandler`) —
-same JSON-over-HTTP contract, same CORS behavior, no third-party dependency.
-Swap it for FastAPI later with no change to `api/pipeline.py` or the contract.
+A local web server that connects the dashboard to the project code. It contains no model or
+statistics logic; each endpoint calls functions in `src/`.
 
 ## Run
 
-```
-./run.sh            # from the repo root — starts the server and opens the dashboard
-# or directly:
-.venv/bin/python api/server.py 8765
+From the repository root:
+
+```bash
+./run.sh                          # starts the server and opens the dashboard
+python api/server.py 8765         # starts the server only
 ```
 
-Then open **http://127.0.0.1:8765/** — the dashboard is served from the same
-origin as the API (avoids any cross-origin/mixed-content issue with a
-browser-hosted page fetching `http://127.0.0.1`).
+The dashboard is served at http://127.0.0.1:8765/, on the same address as the API.
 
 ## Files
 
-- `pipeline.py` — pure business logic (session state, checkpoint listing,
-  shift/interpolate/propagate orchestration, the real validation suite,
-  background job runners for train/generate/fine-tune). No HTTP here.
-- `server.py` — the HTTP layer: routing, JSON, CORS, and serving the
-  demo page `dashboard/index.html` at `/`.
+| File | Purpose |
+|---|---|
+| `server.py` | HTTP routing, JSON and serving `dashboard/index.html`. Uses only the Python standard library. |
+| `pipeline.py` | Session data, checkpoint listing, editing, validation, and background training and generation jobs |
+| `events.py` | Converts the training scripts' printed output into progress events |
+| `ckpt_info.py` | Reads size and parameter counts from model files |
+| `record_replays.py` | Records real runs and builds the data the dashboard replays |
 
-## Dependencies
+## Endpoints
 
-Everything `pipeline.py` imports (`pandas`, `numpy`, `torch`, `matplotlib`,
-`seaborn`, `scipy`, `scikit-learn`, `PyYAML`) is already in the project's own
-`requirements.txt` / `.venv` — no new Python packages were added.
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/health` | Server check |
+| GET | `/api/checkpoints`, `/api/checkpoints/meta` | Available models and their details |
+| GET | `/api/data/rows` | Rows of the loaded data |
+| POST | `/api/data/load` | Load bundled or uploaded data |
+| POST | `/api/shift`, `/api/interpolate`, `/api/propagate` | Edit the synthetic data |
+| POST | `/api/validate` | Run the statistical tests |
+| POST | `/api/train`, `/api/generate`, `/api/fine-tune` | Start a job |
+| GET | `/api/jobs/<id>`, `/api/jobs/<id>/events` | Job status and progress |
+| POST | `/api/jobs/<id>/cancel` | Stop a job |
+| GET | `/api/export/synth.csv` | Download the synthetic data |
+
+No packages beyond `requirements.txt` are needed.

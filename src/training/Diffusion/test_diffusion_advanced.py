@@ -107,7 +107,7 @@ def test_1_unit_insensitive_heuristic():
     """A column rescaled by 1e6 must NOT dominate selection.
 
     Two columns with identical *shape* but different units (one in Pa,
-    one in K) should both be eligible — the heuristic must score them
+    one in K) should both be eligible; the heuristic must score them
     equivalently.
     """
     rng = np.random.default_rng(0)
@@ -294,7 +294,7 @@ def test_6_lora_wrap_and_run():
     state = extract_lora_state(model)
     assert all(k.endswith("lora_A") or k.endswith("lora_B") for k in state.keys())
 
-    # Bump A so it's nonzero, save, zero it, restore — should match.
+    # Bump A so it's nonzero, save, zero it, restore; should match.
     for p in lora_params:
         p.data.add_(0.1)
     state = extract_lora_state(model)

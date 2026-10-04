@@ -58,8 +58,8 @@ saved as a *checkpoint* file.
 raise one sensor's values. Every edit creates a new version; the original is kept.
 
 **5. Fine-tune.** Instead of retraining the whole model, attach a small add-on (*LoRA*) and train only
-that. Here it changes just 1.44% of the model's numbers, yet it noticeably improves how well the
-output matches the real data. The fine-tuned model then generates the final artificial readings that
+that. Here it changes 1.44% of the model's numbers and improves how closely the output matches
+the real data. The fine-tuned model then generates the final artificial readings that
 step 6 tests.
 
 **6. Validate.** Compare artificial and real readings with standard statistical tests:

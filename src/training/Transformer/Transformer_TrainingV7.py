@@ -832,7 +832,7 @@ def generate_from_seed_file(
                 denom     = torch.clamp(tgt_mask_b.sum(), min=1.0)
                 base_loss = (elem_loss * tgt_mask_b).sum() / denom
  
-                # Variance penalty — same as training, keeps spread realistic.
+                # Variance penalty, same as training, keeps spread realistic.
                 if src_b.size(0) > 1:
                     valid_cols = tgt_mask_b.sum(dim=0) > 0
                     if bool(valid_cols.any()):
@@ -854,7 +854,7 @@ def generate_from_seed_file(
             n_batches  += 1
  
         if verbose:
-            print("    Epoch {}/{} — loss: {:.6f}".format(
+            print("    Epoch {}/{}, loss: {:.6f}".format(
                 epoch + 1, adaptation_epochs, epoch_loss / max(1, n_batches)
             ))
  
@@ -1084,14 +1084,14 @@ def generate_transformer_data(
 
     # Load seed windows and sequence lengths written at training time.
     # seed_windows:     {str(eng_id) -> np.array [input_window, F], normalised [-1,1]}
-    # sequence_lengths: {str(eng_id) -> int}  — actual lifecycle length in training data
+    # sequence_lengths: {str(eng_id) -> int}: actual lifecycle length in training data
     seed_windows = ckpt.get("seed_windows", {})
     sequence_lengths = ckpt.get("sequence_lengths", {})
 
     # reseed_interval: re-inject a randomly sampled real window every N steps.
     # Prevents autoregressive variance collapse on long single-sequence rollouts.
     # Only active when > 0 and seed_windows is available. Disabled (None/0) by
-    # default — has no effect on multi-sequence (NASA-style) generation.
+    # default; has no effect on multi-sequence (NASA-style) generation.
     _gen_cfg = cfg.get("generation", {}) if isinstance(cfg, dict) else {}
     reseed_interval = _gen_cfg.get("reseed_interval", None)
     reseed_interval = int(reseed_interval) if reseed_interval else 0
@@ -1172,7 +1172,7 @@ def generate_transformer_data(
         # --- Determine how many steps to generate for this engine ---
         if strategy == "by_engines":
             if cycles_per_engine_explicit:
-                # User explicitly passed cycles_per_engine — honour it unconditionally.
+                # User explicitly passed cycles_per_engine; honour it unconditionally.
                 steps = int(cycles_per_engine)
             else:
                 # Use the engine's actual training length so the synthetic lifecycle
@@ -1505,7 +1505,7 @@ def train_transformer(args, device):
             ])
             csv_file.flush()
 
-        # Save best model (by val_total) — generation-ready packed format
+        # Save best model (by val_total), generation-ready packed format
         if va["total"] < best_val_total:
             best_val_total = va["total"]
             save_packed_model_checkpoint(

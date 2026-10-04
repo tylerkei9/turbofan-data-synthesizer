@@ -1,6 +1,5 @@
 """
-Data Synthesizer API — stdlib-only HTTP server (no FastAPI/uvicorn available
-in this environment) wrapping the real pipeline in api/pipeline.py.
+Data Synthesizer API: a standard-library HTTP server that wraps api/pipeline.py.
 
 Run:
     .venv/bin/python api/server.py [port]

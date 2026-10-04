@@ -150,7 +150,7 @@ def _detect_metadata_columns(columns: list) -> list:
     """Best-effort name-based detection of time and engine_id columns.
 
     Returns a list of column indices (possibly empty).  Any failure to match
-    is silently absorbed — downstream code handles zero metadata columns.
+    is silently absorbed; downstream code handles zero metadata columns.
     """
     lowered = [c.strip().lower() for c in columns]
     found = []
@@ -200,7 +200,7 @@ def select_conditioning_columns(data: np.ndarray, candidate_idx: list,
                                 corr_threshold: float = 0.9) -> list:
     """Pick informative columns to condition on, *without unit bias*.
 
-    Strategy (unsupervised — no engineer input required):
+    Strategy (unsupervised, no engineer input required):
       1. Restrict to ``candidate_idx`` (everything except metadata).
       2. Standardise each column to z-scores, then score it by the normalised
          Shannon entropy of its histogram. This is unit-free: a column
@@ -322,7 +322,7 @@ def group_rows_by_engine(data: np.ndarray, col_indices: dict) -> list:
     """Return a list of (engine_id, row_indices) groups.
 
     If there is no engine_id metadata column, the entire file is treated
-    as a single engine — per the project context's "no engine_id ⇒ one
+    as a single engine, per the project context's "no engine_id ⇒ one
     engine" rule.
     """
     meta_idx = col_indices.get("metadata_idx", [])
@@ -370,7 +370,7 @@ def load_engine_data(path) -> Tuple[np.ndarray, list]:
 
     ``path`` may be a single path (str / Path) or a sequence of paths. When
     multiple files are given, their headers must name the same columns
-    (order may differ — each file is reordered to match the first).  Rows
+    (order may differ; each file is reordered to match the first).  Rows
     from all files are concatenated in the order given.
 
     Returns:
@@ -636,7 +636,7 @@ class ConditionalDenoiser(nn.Module):
         """
         x: (B, sensor_dim) noisy sensor readings
         t: (B,) timesteps
-        c: (B, condition_dim) conditions — may be None if unconditional
+        c: (B, condition_dim) conditions; may be None if unconditional
 
         Returns: (B, sensor_dim) predicted noise
         """
@@ -654,7 +654,7 @@ class ConditionalDenoiser(nn.Module):
 
 
 # ===========================================================================
-# LoRA (Low-Rank Adaptation) — for distribution shift via seed-data fine-tune
+# LoRA (Low-Rank Adaptation): for distribution shift via seed-data fine-tune
 # ===========================================================================
 
 class LoRALinear(nn.Module):
@@ -755,7 +755,7 @@ def load_lora_state(model: nn.Module, lora_state: dict) -> None:
 
 
 # ===========================================================================
-# Per-column statistics — used to seed learned column embeddings
+# Per-column statistics: used to seed learned column embeddings
 # ===========================================================================
 
 # Number of unit-free distribution features per column.  Order matters because
@@ -804,14 +804,14 @@ class TabularTransformerDenoiser(nn.Module):
 
     Each column of the row becomes a token whose embedding is the sum of:
       - a content-derived column identity (a learned projection of the
-        column's distribution-shape statistics — see ``compute_column_stats``),
+        column's distribution-shape statistics; see ``compute_column_stats``),
       - a value projection (the noisy or observed value at this position),
       - a mask projection (1 if the column is being held fixed as a
         conditioning input at this denoising step, 0 if it is being denoised),
       - a broadcast time embedding.
 
     Self-attention then lets every column attend to every other, so the
-    model itself learns which columns inform which — there is no fixed
+    model itself learns which columns inform which; there is no fixed
     "condition" / "target" split.  Order independence is real because the
     column identity is derived purely from each column's standardised
     statistics, never from its position in the CSV.
@@ -1097,7 +1097,7 @@ def train_transformer(model: TabularTransformerDenoiser,
 
 
 # ===========================================================================
-# Inpainting sampler — produces full rows from any subset of observed cols
+# Inpainting sampler: produces full rows from any subset of observed cols
 # ===========================================================================
 
 @torch.no_grad()
@@ -1188,7 +1188,7 @@ def fine_tune_with_seed(base_ckpt_path: str,
     ``seed_data_path`` accepts a single path or a list of paths (delegated to
     :func:`load_engine_data`, so column names must match across files).
 
-    Seed files may contain only a *subset* of the base model's columns —
+    Seed files may contain only a *subset* of the base model's columns;
     missing columns are simply masked out of the loss, so the adapter learns
     to shift the distribution of whatever channels the seeds actually have.
     """
@@ -1342,7 +1342,7 @@ def sample_conditional(model: nn.Module, schedule: DiffusionSchedule,
     """
     Sample sensor readings, optionally conditioned on operating conditions.
 
-    conditions: (N, condition_dim) tensor — pass ``None`` for unconditional.
+    conditions: (N, condition_dim) tensor; pass ``None`` for unconditional.
     n_samples:  required when ``conditions`` is None.
 
     Returns: (N, sensor_dim) numpy array of generated sensor readings.
@@ -1599,7 +1599,7 @@ def domain_classifier_accuracy(real: np.ndarray, synth: np.ndarray,
 
     Accuracy near 0.5 means the synthetic distribution is indistinguishable
     from the real one (the project context's evaluation goal).  Accuracy
-    near 1.0 means trivial separation — bad.
+    near 1.0 means trivial separation: bad.
 
     We use NumPy only so this works in CPU-only test environments.
     """
@@ -1640,7 +1640,7 @@ def umap_latent_visualisation(real: np.ndarray, synth: np.ndarray,
                               out_path: str) -> Optional[str]:
     """Save a UMAP scatter of real vs synthetic to ``out_path``.
 
-    Quietly returns ``None`` if umap-learn or matplotlib are unavailable —
+    Quietly returns ``None`` if umap-learn or matplotlib are unavailable;
     the rest of the diagnostics still run.  This is the project context's
     "UMAP visualization of latent trajectories" requirement.
     """
@@ -1792,7 +1792,7 @@ def _build_transformer_data(data_path: str, n_conditions: int, verbose: bool):
     verbose_print(verbose, f"  Metadata:        {[cols[i] for i in col_indices['metadata_idx']]}")
     verbose_print(verbose, f"  Targets:         {len(col_indices['sensor_idx']) + len(col_indices['condition_idx'])} columns")
 
-    # Transformer treats sensors + conditions as one unified token sequence —
+    # Transformer treats sensors + conditions as one unified token sequence;
     # the model figures out itself which columns inform which.
     learn_idx = col_indices["sensor_idx"] + col_indices["condition_idx"]
     learn_data = raw_data[:, learn_idx]
@@ -2031,7 +2031,7 @@ def main():
     parser.add_argument("--seed-data", type=str, nargs="+", default=None,
                         help="One or more seed CSVs for fine-tune mode (subset of "
                              "training columns is OK). Multiple files are concatenated "
-                             "by load_engine_data() — column names must match across "
+                             "by load_engine_data(); column names must match across "
                              "files (order may differ).")
     parser.add_argument("--adapter-out", type=str, default=None,
                         help="Where to save the LoRA adapter in fine-tune mode")
@@ -2290,7 +2290,7 @@ def main():
         sensor_dim = len(sensor_stats["mean"])
         condition_dim = len(cond_stats["mean"])
 
-        # Old checkpoints (pre auto-conditioning) cannot be safely loaded — the
+        # Old checkpoints (pre auto-conditioning) cannot be safely loaded; the
         # original column-role mapping is unknown and would need to be guessed.
         if col_indices is None:
             raise RuntimeError(

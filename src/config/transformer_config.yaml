@@ -1,10 +1,8 @@
-# name parameter is used for:
-# - naming the .pt file in model_checkPoints 
-# - selecting which model to load for generation
-# - naming the generated synth_data .csv file in outputs/transformer
+# model.name sets the checkpoint file name, the model loaded for generation,
+# and the name of the generated CSV.
 model:
   type: "Transformer"
-  name: "name_from_frontend" # front end interacts with this when training, generating, deciding which model to load!
+  name: "transformer_model"
 
 runtime:
   lambda_var: 0.01
@@ -17,18 +15,15 @@ runtime:
   weight_decay: 1.0e-4
   num_workers: 2
 
-# - "by_engines": generates cycles_per_engine for each engine (may exceed num_samples)
-# - "by_samples": generates exactly num_samples total (may skip engines)
-# - "n_engines": number of engines to generate (set to 'null' if want to include all engines)
-# - "cycles_per_engine": only used if strategy="all_engines"
-# - "num_samples": only used if strategy="total_samples"
-# - "reseed_interval": re-inject a real window every N steps (single-sequence only; recommended: 64)
+# strategy "by_engines": cycles_per_engine rows for each of n_engines engines (null = all)
+# strategy "by_samples": num_samples rows in total
+# reseed_interval: single-sequence data only; insert a real window every N steps (0 disables)
 generation:
   strategy: "by_engines"
-  n_engines: 50 
-  cycles_per_engine: 30 # if single-sequence, this is how many samples it generates. For RR, put a high number.
+  n_engines: 50
+  cycles_per_engine: 30   # for single-sequence data, the total number of rows
   num_samples: 2000
-  reseed_interval: 64   
+  reseed_interval: 64
   
 columns:
   engine_id_col_candidates: ["Engine_ID", "UnitNumber", "engine_id"]

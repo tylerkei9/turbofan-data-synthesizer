@@ -1,240 +1,72 @@
-# Interpolation Module
+# Interpolation
 
-## Overview
+`interpolation.py` provides one function, `apply_interpolation`, and passes the work to a method
+module:
 
-This module provides a unified interface for applying interpolation
-methods to time-series or tabular data.
-
-It integrates: - `linear_interpolation.py` - `Bspline_MultFunc.py`
-
-through a **gateway pattern**, where `interpolation.py` acts as the
-central interface.
-
-------------------------------------------------------------------------
-
-## Architecture
-
-    interpolation.py (Gateway)
-        ↓
-        ├─→ linear_interpolation.py (method="linear")
-        ├─→ Bspline_MultFunc.py (method="spline")
-        └─→ ML module (method="ml") [TODO]
-
--   Central routing handled in `interpolation.py`
--   Implementation logic remains modular and isolated
--   Easily extensible for future methods
-
-------------------------------------------------------------------------
+| `method` | Module | Status |
+|---|---|---|
+| `"linear"` | `linear_interpolation.py` | Implemented |
+| `"spline"` | `Bspline_MultFunc.py` | Implemented |
+| `"ml"` | | Not implemented; returns a copy of the input |
 
 ## API
 
-``` python
-def apply_interpolation(
+```python
+apply_interpolation(
     data: pd.DataFrame,
     method: Literal["linear", "spline", "ml"] = "linear",
-    target_columns: Optional[list] = None,
-    x_column: Optional[str] = None,
-    gap_threshold: float = 1.0,
-    num_points: int = 10,
-    max_gap_cycles: int = 10,
-    engine_id_column: Optional[str] = None
-) -> pd.DataFrame:
+    target_columns: Optional[list] = None,   # default: all numeric columns
+    x_column: Optional[str] = None,          # default: auto-detected
+    gap_threshold: float = 1.0,              # spline: spacing that counts as a gap
+    num_points: int = 10,                    # spline: rows inserted per gap
+    max_gap_cycles: int = 10,                # linear: longest gap to fill
+    engine_id_column: Optional[str] = None,  # linear: fill within each engine
+) -> pd.DataFrame
 ```
 
-------------------------------------------------------------------------
+## Methods
 
-## Parameters
+| | Linear | Spline |
+|---|---|---|
+| Purpose | Fill missing values | Add rows between clusters of points |
+| Row count | Unchanged | Increases |
+| Gap handling | Up to `max_gap_cycles` | Gap detection with `detect_clusters()` |
+| Marker column | None | `is_interpolated` |
 
--   `data`: Input DataFrame
--   `method`: `"linear"`, `"spline"`, or `"ml"`
--   `target_columns`: Columns to interpolate (default = numeric columns)
--   `x_column`: Independent variable (auto-detected if not provided)
--   `engine_id_column`: Used for grouped interpolation (linear only)
--   `max_gap_cycles`: Max gap size for linear interpolation
--   `gap_threshold`: Gap threshold for spline interpolation
--   `num_points`: Number of interpolated points per gap (spline)
+**Linear**
+- Fills missing values by straight-line interpolation.
+- Skips ID columns (`Engine_ID`, `Time_in_cycles`) and constant columns.
+- Works per engine when engine and time columns exist, otherwise along time or row order.
+- Leaves gaps longer than `max_gap_cycles` unfilled.
 
-------------------------------------------------------------------------
+**Spline**
+- Finds gaps where the spacing between x-values exceeds `gap_threshold`.
+- Inserts `num_points` rows per gap. Columns not in `target_columns` are left empty in new rows.
+- `x_column` is chosen in this order: the given value, `Time_in_cycles`, the first numeric column.
+  An error is raised if none exists.
 
-## Behavior by Method
+## Examples
 
-### Linear Interpolation (`method="linear"`)
+```python
+result = apply_interpolation(data, method="linear",
+                             x_column="Time_in_cycles", engine_id_column="Engine_ID",
+                             max_gap_cycles=20)
 
--   Fills NaN gaps using linear interpolation
--   Excludes:
-    -   ID columns (`Engine_ID`, `Time_in_cycles`)
-    -   Constant columns (auto-detected)
--   Supports three modes:
-    1.  Per-engine (Engine_ID + Time column)
-    2.  Time-series only
-    3.  Index-based fallback
--   Leaves gaps larger than `max_gap_cycles` unfilled
-
-------------------------------------------------------------------------
-
-### Spline Interpolation (`method="spline"`)
-
--   Detects clusters using `detect_clusters()`
--   Gaps defined where spacing between x-values exceeds `gap_threshold`
--   Inserts `num_points` new rows per gap
--   Adds column:
-    -   `is_interpolated` (True for generated rows)
-
-#### x_column Resolution Order
-
-1.  User-provided value
-2.  `"Time_in_cycles"` if present
-3.  First numeric column
-4.  Raises error if none found
-
-#### Important Behavior
-
--   Only interpolates selected columns
--   Non-target columns are set to NaN in new rows
--   Internally returns `(original_df, interpolated_df)`\
-    → Gateway returns only `interpolated_df`
-
-------------------------------------------------------------------------
-
-### ML Interpolation (`method="ml"`)
-
--   Not implemented
--   Returns a copy of the original DataFrame
-
-------------------------------------------------------------------------
-
-## Usage Examples
-
-### Linear
-
-``` python
-result = apply_interpolation(data, method="linear")
+result = apply_interpolation(data, method="spline",
+                             target_columns=["4", "11"], gap_threshold=2.0, num_points=15)
 ```
 
-``` python
-result = apply_interpolation(
-    data,
-    method="linear",
-    x_column="Time_in_cycles",
-    engine_id_column="Engine_ID",
-    max_gap_cycles=20
-)
+## Use from the dashboard
+
+The dashboard lets the user choose linear or spline and calls `apply_interpolation()` through
+`api/pipeline.py`. The bundled NASA data has no gaps, so the demo can remove a stretch of one
+engine's readings first and then fill it.
+
+## Tests
+
+```bash
+python src/features/interpolation_testing/test_interpolation_integration.py
 ```
 
-------------------------------------------------------------------------
-
-### Spline
-
-``` python
-result = apply_interpolation(
-    data,
-    method="spline",
-    x_column="Time_in_cycles"
-)
-```
-
-``` python
-result = apply_interpolation(
-    data,
-    method="spline",
-    target_columns=["sensor_4", "sensor_9"],
-    gap_threshold=2.0,
-    num_points=15
-)
-```
-
-------------------------------------------------------------------------
-
-## Using It from the Dashboard
-
--   The dashboard lets the user pick the method (linear or spline) and calls
-    `apply_interpolation()` through `api/pipeline.py`
--   Gap detection (`detect_clusters()`) runs automatically when the spline method is chosen
--   The bundled NASA data has no natural gaps, so the demo can punch a gap into one engine
-    first and then fill it, to show the method working
-
-------------------------------------------------------------------------
-
-## Benefits
-
-### Separation of Concerns
-
--   Gateway handles routing only
--   Logic isolated in implementation modules
-
-### Extensibility
-
--   Easy to add new methods (e.g., ML)
-
-### Robust Defaults
-
--   Auto-detection of:
-    -   Engine ID column
-    -   Time column
-    -   Numeric target columns
-
-### Reusability
-
--   Works with arbitrary DataFrame schemas
--   No strict dependency on column names
-
-### Clean Design
-
--   No duplicated logic
--   Consistent API across methods
--   Implementation details abstracted away
-
-------------------------------------------------------------------------
-
-## Method Comparison
-
-| Feature        |  Linear                          |    Spline|
-|----------------| -----------------------          |----------------------------|
-| Purpose        |  Fill NaNs                       |   Connect clusters         |
-| Row Count      |     Same                         |  Increases                 |
-| Modification   |   In-place                       |Adds new rows               |
-| Gap Handling   |   Limited     (`max_gap_cycles`) | Full cluster detection     |
-| Marker Column  |   None                           | `is_interpolated`          |
-  -----------------------------------------------------------------------
-
-
-## Testing
-
-``` bash
-python test_interpolation_integration.py
-```
-This verifies:
-- ✓ Linear method fills NaN gaps correctly
-- ✓ Linear method works without time column (uses row index)
-- ✓ Spline method delegates correctly to Bspline_MultFunc
-- ✓ Spline method adds interpolated points between clusters
-- ✓ Target columns parameter works for both methods
-- ✓ Column auto-detection works (no hardcoded names required)
-- ✓ ML method returns gracefully with TODO message
-------------------------------------------------------------------------
-
-## File Structure
-
-    src/features/
-    ├── interpolation.py
-    ├── linear_interpolation.py
-    ├── Bspline_MultFunc.py
-    └── ml_interpolation.py   # future
-
-------------------------------------------------------------------------
-
-## Notes
-
--   Linear interpolation uses `interpolate_engine()` internally
--   Constant columns are automatically excluded
--   Spline interpolation operates on cluster boundaries only
--   Gateway ensures a consistent API regardless of method
--   No breaking changes to existing usage
--   Designed for backend-driven workflows
--   Available from the dashboard through `api/pipeline.py`
-
-## Next Steps
-
-### For Future Development:
-1. **Implement ML Interpolation**: Create ML-based module and update gateway
-2. **Parameter Tuning UI**: Add controls for method-specific parameters
+Covers linear filling with and without a time column, spline gap filling, `target_columns`, column
+auto-detection, and the `ml` placeholder.

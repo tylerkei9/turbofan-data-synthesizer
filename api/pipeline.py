@@ -1,5 +1,5 @@
 """
-Pure business logic for the Data Synthesizer API — no HTTP here.
+Pure business logic for the Data Synthesizer API; no HTTP here.
 
 Wraps the real project code (src/features/*, src/training/*, src/validate/*)
 behind plain Python functions that server.py calls. Keeping this separate
@@ -22,7 +22,7 @@ from typing import Any
 from unittest.mock import patch
 
 import matplotlib
-matplotlib.use("Agg")  # must happen before src.validate.* imports pyplot — the
+matplotlib.use("Agg")  # must happen before src.validate.* imports pyplot; the
                         # HTTP server runs each request on a worker thread, and
                         # macOS's default GUI backend can only draw on the main one.
 import pandas as pd
@@ -58,7 +58,7 @@ OUTPUTS_DIR = PROJECT_ROOT / "outputs"
 _ID_COLS = {"Engine_ID", "Time_in_cycles", "Altitude", "Mach_number", "TRA"}
 
 
-# ── session (single in-memory session — this is a local dev tool, not a
+# ── session (single in-memory session; this is a local dev tool, not a
 #    multi-tenant service) ───────────────────────────────────────────────
 
 class Session:

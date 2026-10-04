@@ -6,7 +6,7 @@ model:
   hidden_dim: 256
 
 # Conditioning behaviour. The model auto-selects which columns to condition
-# on from the data itself (variance + correlation heuristic) — engineers do
+# on from the data itself (variance + correlation heuristic); engineers do
 # not need to know which parameters drive operational distributions.
 # Only `n_conditions` (how many columns to pick) is configurable.
 conditioning:

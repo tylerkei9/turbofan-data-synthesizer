@@ -84,7 +84,7 @@ def _tmp(name: str) -> Path:
 
 
 # ===========================================================================
-# TEST 1: Backward compatibility — single path string still works
+# TEST 1: Backward compatibility, single path string still works
 # ===========================================================================
 def test_1_single_path_backward_compat():
     """Passing a single string path must behave exactly as before."""
@@ -200,7 +200,7 @@ def test_4_mismatched_headers_errors():
 # ===========================================================================
 def test_5_pipeline_works_on_combined():
     """auto_resolve_columns + prepare_conditional_data must see the combined
-    dataset as one contiguous frame — no trace of the file boundary.
+    dataset as one contiguous frame, no trace of the file boundary.
     """
     columns = ["engine_id", "timestep", "p0", "p1", "p2", "p3"]
     data1 = _make_synthetic(80, columns, seed=7)

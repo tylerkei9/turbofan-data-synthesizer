@@ -1,6 +1,6 @@
 # Turbofan Data Synthesizer
 
-**Making realistic, artificial jet-engine sensor data, and proving it looks like the real thing.**
+**Generates synthetic jet-engine sensor data and tests it against real data.**
 
 ![The dashboard's Validate scene](dashboard/preview.png)
 
@@ -9,7 +9,7 @@
 Airlines and engine makers want software that predicts when an engine part will wear out. Building
 that software takes lots of engine sensor data, but real data is scarce, expensive, and often
 confidential. **Synthetic data** (artificial data that behaves like real data) can fill the gap,
-but only if it is genuinely realistic.
+but only if it is realistic.
 
 This project:
 
@@ -27,7 +27,7 @@ Open **`dashboard/index.html`** in any modern web browser. It is a single file t
 - **Run the full demo** walks through the whole process in about 90 seconds.
 - **Skip to the result** jumps straight to the final test (about 10 seconds).
 
-Everything in the demo replays real recorded training runs of this code; nothing is made up.
+The demo replays recorded training runs of this code.
 The [dashboard guide](docs/dashboard-guide.md) explains every screen.
 
 ## How it works, in six steps
@@ -78,7 +78,7 @@ contain any data provided by the sponsor.
 - Refactored a transformer ML pipeline, externalizing 15+ hyperparameters into YAML configs with 6
   CLI flags for single command reproducible execution
 - Built an auto-checkpointing system persisting model weights, optimizer state, and scheduler every
-  5 epochs, enabling seamless training resumption after interruptions
+  5 epochs, so training can resume after an interruption
 - Designed a Streamlit frontend with a custom CSS design system wiring 3 backend ML modules to UI
   controls, supporting reactive data manipulation across interactive visualizations
 

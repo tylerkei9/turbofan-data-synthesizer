@@ -304,7 +304,7 @@ def apply_interpolation(
         return clean_original, original_df
 
     print(
-        f"[spline_interpolation] Detected {len(clusters)} cluster(s) — "
+        f"[spline_interpolation] Detected {len(clusters)} cluster(s); "
         f"interpolating across {len(clusters) - 1} gap(s) "
         f"with {num_points} point(s) each."
     )
@@ -351,7 +351,7 @@ def apply_interpolation(
         interp_df = pd.DataFrame(new_rows)
         interp_df["is_interpolated"] = True
 
-        # Align columns — fill any missing ones with NaN
+        # Align columns; fill any missing ones with NaN
         for col in df.columns:
             if col not in interp_df.columns:
                 interp_df[col] = np.nan

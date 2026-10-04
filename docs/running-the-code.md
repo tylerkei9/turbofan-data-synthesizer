@@ -1,6 +1,6 @@
 # Running the code
 
-This guide is for anyone who wants to run the models themselves. To just see the project, open
+This guide is for anyone who wants to run the models themselves. To view the project, open
 `dashboard/index.html` instead; it needs none of this.
 
 ## 1. Set up (one time)

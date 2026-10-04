@@ -4,9 +4,9 @@ Tests for the column-agnostic behaviour of diffusion_model5.py.
 
 Each test isolates ONE of the four requirements:
   1. No hardcoded column names anywhere in the resolution path.
-  2. No hardcoded column count — model adapts to whatever the data has.
-  3. No dependence on column order — shuffling columns produces equivalent results.
-  4. User does not need to know which columns to condition on — the model
+  2. No hardcoded column count: model adapts to whatever the data has.
+  3. No dependence on column order: shuffling columns produces equivalent results.
+  4. User does not need to know which columns to condition on: the model
      auto-selects them via the unsupervised variance + correlation heuristic.
 
 Usage:
@@ -89,13 +89,13 @@ def _write_csv(path: Path, columns: list, data: np.ndarray) -> None:
 
 
 # ===========================================================================
-# TEST 1: No hardcoded column names — arbitrary names work
+# TEST 1: No hardcoded column names, arbitrary names work
 # ===========================================================================
 def test_1_no_hardcoded_names():
     """auto_resolve_columns must not depend on any specific column name.
 
-    We give it columns named with random gibberish — no 'Engine_ID', no
-    'Altitude', etc. — and it must still produce a sensible mapping.
+    We give it columns named with random gibberish (no 'Engine_ID', no
+    'Altitude', etc.) and it must still produce a sensible mapping.
     """
     columns = ["zxqv", "kpwo", "asdf", "mlkj", "qwer", "yuio"]
     data = _make_synthetic(200, columns, seed=1)
@@ -121,7 +121,7 @@ def test_1_no_hardcoded_names():
 
 
 # ===========================================================================
-# TEST 2: No hardcoded column count — model adapts to width
+# TEST 2: No hardcoded column count, model adapts to width
 # ===========================================================================
 def test_2_no_hardcoded_count():
     """The full pipeline must work for varied total column counts."""
@@ -263,7 +263,7 @@ def test_4_auto_selects_conditions():
 
 
 # ===========================================================================
-# TEST 5: Metadata auto-detection — gracefully handles "no engine_id"
+# TEST 5: Metadata auto-detection, gracefully handles "no engine_id"
 # ===========================================================================
 def test_5_metadata_optional():
     """Per spec, only time and engine_id MAY be present. Code must work
@@ -284,7 +284,7 @@ def test_5_metadata_optional():
     meta_b = _detect_metadata_columns(cols_b)
     assert meta_b == [0], f"expected only time col, got {meta_b}"
 
-    # Case C: neither present — pipeline still resolves and trains a model
+    # Case C: neither present; pipeline still resolves and trains a model
     cols_c = ["foo", "bar", "baz", "qux"]
     data_c = _make_synthetic(n, cols_c, seed=12)
     meta_c = _detect_metadata_columns(cols_c)

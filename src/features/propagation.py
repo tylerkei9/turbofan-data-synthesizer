@@ -271,7 +271,7 @@ def _prepare_diffusion_input(data: pd.DataFrame, bundle: dict):
         "conditions_norm": conditions_norm,  # (N, 3)
         "cond_stats": cond_stats,
         "sensor_stats": sensor_stats,
-        "sensors_norm": sensors_norm,          # (N, 21) or None — for propagation
+        "sensors_norm": sensors_norm,          # (N, 21) or None, for propagation
         "sensor_col_names": sensor_col_names,
         "conditions_raw": conditions_raw,      # (N, 3) un-normalized
         "input_data": data,
